@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SIPERU DKUKMPP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 280px; background: #003366; color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 100; }
+        .sidebar h2 { font-size: 20px; margin-bottom: 40px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .menu-link { display: flex; align-items: center; gap: 10px; padding: 14px 15px; color: #a1c4e6; text-decoration: none; border-radius: 8px; margin-bottom: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .menu-link:hover, .active { background: #0056b3; color: white; }
+        .btn-logout { background: #dc3545; width: 100%; border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 50px; font-weight: bold; transition: 0.3s; }
+        .btn-logout:hover { background: #c82333; }
+
+        /* Main Content */
+        .main { margin-left: 280px; flex: 1; padding: 40px; }
+        .panel { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .panel h3 { margin-bottom: 20px; border-left: 5px solid #0056b3; padding-left: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Form & Table */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+        label { font-size: 13px; font-weight: bold; color: #555; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        button[type="submit"] { grid-column: span 2; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button[type="submit"]:hover { background: #004494; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f8fafc; text-align: left; padding: 12px; font-size: 12px; color: #666; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
+        .btn-edit { background: #ffc107; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; margin-right: 5px; }
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .badge-waktu { background: #eef5ff; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; display: inline-block; white-space: nowrap; }
+        
+        /* Download & Filter */
+        .download-tools { display: flex; gap: 10px; }
+        .btn-excel { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-pdf { background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        
+        .filter-bar { display: flex; gap: 15px; align-items: flex-end; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; }
+        .btn-reset { background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+    </style>
+</head>
+<body style="display: none;" id="adminBody">
+
+<div class="sidebar">
+    <h2>SIPERU ADMIN</h2>
+    <a href="#" class="menu-link active" id="btnForm">📝 Formulir Pemesanan</a>
+    <a href="#" class="menu-link" id="btnList">📅 Kelola Jadwal</a>
+    <a href="#" class="menu-link" id="btnRooms">🏠 Kelola Ruangan</a>
+    <a href="#" class="menu-link" id="btnLog">🕒 Riwayat Aktivitas</a>
+    <button id="btnLogout" class="btn-logout">Keluar Sistem</button>
+</div>
+
+<div class="main">
+    <div id="panelForm" class="panel">
+        <h3>Input Data Peminjaman</h3>
+        <form id="formBooking" class="form-grid">
+            <input type="hidden" id="editDocId" value="">
+            <div class="form-group"><label>Ruangan</label><select id="ruangan" required></select></div>
+            <div class="form-group"><label>Pelaksana Kegiatan (Bidang)</label><select id="pelaksana" required>
+                <option value="Sekretariat">Sekretariat</option>
+                <option value="Koperasi">Koperasi</option>
+                <option value="Usaha Mikro">Usaha Mikro</option>
+                <option value="Perindustrian">Perindustrian</option>
+                <option value="Pengembangan Perdagangan">Pengembangan Perdagangan</option>
+                <option value="Sarana Perdagangan">Sarana Perdagangan</option>
+                <option value="UPTD Metrologi">UPTD Metrologi</option>
+            </select></div>
+            <div class="form-group"><label>Agenda</label><input type="text" id="agenda" required></div>
+            <div class="form-group"><label>Tanggal</label><input type="date" id="tanggal" required></div>
+            <div class="form-group"><label>Mulai</label><input type="time" id="jamMulai" required></div>
+            <div class="form-group"><label>Selesai</label><input type="time" id="jamSelesai" required></div>
+            <button type="submit" id="btnSubmitBooking">Simpan Pemesanan</button>
+        </form>
+    </div>
+
+    <div id="panelList" class="panel" style="display: none;">
+        <h3>
+            Daftar Jadwal
+            <div class="download-tools">
+                <button class="btn-excel" id="btnUnduhExcel">📊 Unduh Excel</button>
+                <button class="btn-pdf" id="btnUnduhPDF">📄 Unduh PDF</button>
+            </div>
+        </h3>
+        
+        <div class="filter-bar">
+            <div style="flex: 1;"><label>Filter Bulan</label><input type="month" id="filterBulan" style="width: 100%;"></div>
+            <div style="flex: 1;"><label>Filter Tanggal</label><input type="date" id="filterTanggal" style="width: 100%;"></div>
+            <div><button id="btnResetFilter" class="btn-reset">Reset Filter</button></div>
+        </div>
+
+        <table id="tabelJadwal">
+            <thead><tr><th>Tanggal</th><th>Waktu</th><th>Ruangan</th><th>Bidang</th><th>Agenda</th><th style="text-align: center;">Aksi</th></tr></thead>
+            <tbody id="bodyJadwal"></tbody>
+        </table>
+    </div>
+
+    <div id="panelRooms" class="panel" style="display: none;">
+        <h3>Pengaturan Ruangan & Foto Slideshow</h3>
+        <form id="formRoom" style="margin-bottom: 30px; background: #f9f9f9; padding: 25px; border-radius: 10px; border: 1px solid #eee;">
+            <input type="hidden" id="editRoomId" value="">
+            <div class="form-grid">
+                <div class="form-group"><label>Nama Ruangan</label><input type="text" id="roomName" placeholder="Contoh: Ruang Rapat Lantai 1"></div>
+                <div class="form-group"><label>Kapasitas (Orang)</label><input type="number" id="roomCap" required></div>
+                <div class="form-group" style="grid-column: span 2;"><label>Link URL Foto</label><input type="text" id="roomImg" required></div>
+                <button type="submit" style="background: #28a745;">Simpan / Update Data Ruangan</button>
+            </div>
+        </form>
+        <table>
+            <thead><tr><th>Nama Ruangan</th><th>Kapasitas</th><th style="text-align: center;">Aksi</th></tr></thead>
+            <tbody id="bodyRooms"></tbody>
+        </table>
+    </div>
+
+    <div id="panelLog" class="panel" style="display: none;">
+        <h3>Riwayat Aktivitas Sistem</h3>
+        
+        <div class="filter-bar">
+            <div style="flex: 1;"><label>Filter Bulan Log</label><input type="month" id="filterLogBulan" style="width: 100%;"></div>
+            <div style="flex: 1;"><label>Filter Tanggal Log</label><input type="date" id="filterLogTanggal" style="width: 100%;"></div>
+            <div><button id="btnResetLogFilter" class="btn-reset">Reset Filter</button></div>
+        </div>
+
+        <table id="tabelLog">
+            <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Keterangan Detail</th></tr></thead>
+            <tbody id="bodyLog"></tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDoc, updateDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyAa24QVQcS42AYn9mrB3KiN2cayiOuXEuc",
+        authDomain: "danu-project-8ec0e.firebaseapp.com",
+        projectId: "danu-project-8ec0e",
+        storageBucket: "danu-project-8ec0e.firebasestorage.app",
+        messagingSenderId: "711467380214",
+        appId: "1:711467380214:web:153181d40da8fbd08f2bd7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => { if (user) { document.getElementById('adminBody').style.display = "flex"; } else { window.location.replace("login.html"); } });
+    document.getElementById('btnLogout').onclick = () => signOut(auth);
+
+    // --- AUTO LOGOUT & LOG AKTIVITAS ---
+    let inactivityTimer;
+    const resetTimer = () => { clearTimeout(inactivityTimer); inactivityTimer = setTimeout(() => { signOut(auth).then(() => alert("Sesi berakhir karena tidak aktif selama 30 menit. Silakan login kembali.")); }, 30 * 60 * 1000); };
+    document.onmousemove = document.onkeypress = document.onclick = document.onscroll = resetTimer;
+
+    async function catatLog(aksi, detail) {
+        const user = auth.currentUser;
+        if (!user) return;
+        
+        try {
+            await addDoc(collection(db, "log_aktivitas"), {
+                waktu: new Date().toLocaleString('id-ID'),
+                timestamp: Date.now(),
+                tanggalLog: new Date().toISOString().split('T')[0], // Kolom khusus untuk filter
+                user: user.email,
+                aksi: aksi,
+                detail: detail
+            });
+        } catch (error) {
+            console.error("Gagal mencatat log aktivitas: ", error);
+        }
+    }
+
+    // --- NAVIGASI PANEL ---
+    const panels = { form: document.getElementById('panelForm'), list: document.getElementById('panelList'), rooms: document.getElementById('panelRooms'), log: document.getElementById('panelLog') };
+    const navs = { form: document.getElementById('btnForm'), list: document.getElementById('btnList'), rooms: document.getElementById('btnRooms'), log: document.getElementById('btnLog') };
+    
+    function showPanel(key) { Object.keys(panels).forEach(k => { panels[k].style.display = k === key ? "block" : "none"; navs[k].classList.toggle('active', k === key); }); }
+    navs.form.onclick = () => showPanel('form'); 
+    navs.list.onclick = () => showPanel('list'); 
+    navs.rooms.onclick = () => showPanel('rooms'); 
+    navs.log.onclick = () => showPanel('log');
+
+    // --- RENDER & FILTER RIWAYAT AKTIVITAS (DENGAN PENANGANAN DATA LAMA) ---
+    let allLogs = [];
+    document.getElementById('filterLogTanggal').value = new Date().toISOString().split('T')[0];
+
+    onSnapshot(query(collection(db, "log_aktivitas"), orderBy("timestamp", "desc")), (snap) => {
+        allLogs = snap.docs.map(d => d.data());
+        renderTabelLog();
+    });
+
+    function renderTabelLog() {
+        const fTanggal = document.getElementById('filterLogTanggal').value;
+        const fBulan = document.getElementById('filterLogBulan').value;
+        const body = document.getElementById('bodyLog');
+        body.innerHTML = "";
+
+        const filtered = allLogs.filter(r => {
+            // PERBAIKAN: Deteksi data log lama yang belum punya 'tanggalLog'
+            let logDate = r.tanggalLog;
+            if (!logDate && r.timestamp) {
+                const dateObj = new Date(r.timestamp);
+                logDate = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
+            }
+
+            if (fTanggal) return logDate === fTanggal;
+            if (fBulan) return logDate && logDate.startsWith(fBulan);
+            return true;
+        });
+
+        if (filtered.length === 0) { body.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px; color:#999;'>Tidak ada log aktivitas ditemukan.</td></tr>"; return; }
+
+        filtered.forEach(r => {
+            let color = r.aksi === "BUAT BARU" ? "#28a745" : (r.aksi === "HAPUS DATA" ? "#dc3545" : "#ffc107");
+            body.innerHTML += `<tr><td>${r.waktu}</td><td><b>${r.user}</b></td><td><span style="background:${color}; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">${r.aksi}</span></td><td>${r.detail}</td></tr>`;
+        });
+    }
+
+    document.getElementById('filterLogTanggal').onchange = () => { document.getElementById('filterLogBulan').value = ""; renderTabelLog(); };
+    document.getElementById('filterLogBulan').onchange = () => { document.getElementById('filterLogTanggal').value = ""; renderTabelLog(); };
+    document.getElementById('btnResetLogFilter').onclick = () => { document.getElementById('filterLogTanggal').value = ""; document.getElementById('filterLogBulan').value = ""; renderTabelLog(); };
+
+    // --- KELOLA DATA RUANGAN ---
+    onSnapshot(collection(db, "master_ruangan"), (snap) => {
+        const body = document.getElementById('bodyRooms'); const select = document.getElementById('ruangan');
+        body.innerHTML = ""; select.innerHTML = '<option value="">Pilih Ruangan...</option>';
+        snap.forEach(d => {
+            const r = d.data();
+            body.innerHTML += `<tr><td>${d.id}</td><td>${r.kapasitas} Orang</td><td style="text-align:center;"><button class="btn-edit" onclick="editRoom('${d.id}')">Edit</button><button class="btn-delete" onclick="hapusRoom('${d.id}')">Hapus</button></td></tr>`;
+            select.innerHTML += `<option value="${d.id}">${d.id}</option>`;
+        });
+    });
+
+    window.editRoom = async (id) => {
+        const d = (await getDoc(doc(db, "master_ruangan", id))).data();
+        document.getElementById('roomName').value = id;
+        document.getElementById('roomCap').value = d.kapasitas;
+        document.getElementById('roomImg').value = d.foto;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.hapusRoom = async (id) => { 
+        if(confirm("Hapus ruangan ini?")) { 
+            await deleteDoc(doc(db, "master_ruangan", id)); 
+            catatLog("HAPUS DATA", `Menghapus master ruangan: ${id}`); 
+        } 
+    };
+
+    document.getElementById('formRoom').onsubmit = async (e) => {
+        e.preventDefault(); 
+        const id = document.getElementById('roomName').value.trim();
+        if(!id) return;
+        await setDoc(doc(db, "master_ruangan", id), { kapasitas: parseInt(document.getElementById('roomCap').value), foto: document.getElementById('roomImg').value }, { merge: true });
+        catatLog("BUAT/UBAH DATA", `Memperbarui info ruangan: ${id}`); 
+        document.getElementById('formRoom').reset();
+    };
+
+    // --- KELOLA JADWAL & VALIDASI BENTROK ---
+    document.getElementById('formBooking').onsubmit = async (e) => {
+        e.preventDefault(); 
+        const editId = document.getElementById('editDocId').value;
+        const btn = document.getElementById('btnSubmitBooking');
+
+        const inputRuangan = document.getElementById('ruangan').value;
+        const inputTanggal = document.getElementById('tanggal').value;
+        const inputMulai = document.getElementById('jamMulai').value;
+        const inputSelesai = document.getElementById('jamSelesai').value;
+
+        btn.disabled = true; btn.innerHTML = "Mengecek Jadwal...";
+
+        try {
+            const qBentrok = query(collection(db, "jadwal_booking"), where("ruangan", "==", inputRuangan), where("tanggal", "==", inputTanggal));
+            const snapBentrok = await getDocs(qBentrok);
+            
+            let isBentrok = false;
+            snapBentrok.forEach(docSnap => {
+                if (editId && docSnap.id === editId) return; 
+                const dbData = docSnap.data();
+                const dbMulai = dbData.jam_mulai.replace(" WIB", "");
+                const dbSelesai = dbData.jam_selesai.replace(" WIB", "");
+                if (inputMulai < dbSelesai && inputSelesai > dbMulai) { isBentrok = true; }
+            });
+
+            if (isBentrok) {
+                alert("❌ GAGAL: Ruangan sudah dibooking pada jam tersebut! Silakan pilih jam atau ruangan lain.");
+                btn.disabled = false; btn.innerHTML = editId ? "Update Pemesanan" : "Simpan Pemesanan";
+                return; 
+            }
+
+            btn.innerHTML = "Menyimpan...";
+            const data = { 
+                ruangan: inputRuangan, pelaksana_kegiatan: document.getElementById('pelaksana').value, 
+                agenda: document.getElementById('agenda').value, tanggal: inputTanggal, 
+                jam_mulai: inputMulai + " WIB", jam_selesai: inputSelesai + " WIB" 
+            };
+
+            if(editId) { 
+                await updateDoc(doc(db, "jadwal_booking", editId), data); 
+                catatLog("UBAH DATA", `Agenda: '${data.agenda}' di ${data.ruangan} tgl ${data.tanggal}`); 
+            } else { 
+                await addDoc(collection(db, "jadwal_booking"), data); 
+                catatLog("BUAT BARU", `Agenda: '${data.agenda}' di ${data.ruangan} tgl ${data.tanggal}`); 
+            }
+            
+            document.getElementById('formBooking').reset(); document.getElementById('editDocId').value = "";
+            btn.innerHTML = "Simpan Pemesanan";
+            alert("✅ Data berhasil disimpan!");
+            
+        } catch (err) { 
+            alert("Error: " + err.message); 
+            btn.innerHTML = editId ? "Update Pemesanan" : "Simpan Pemesanan";
+        } finally { btn.disabled = false; }
+    };
+
+    // --- RENDER & FILTER DAFTAR JADWAL ---
+    let allSchedules = [];
+    window.currentFilteredSchedules = []; 
+
+    onSnapshot(query(collection(db, "jadwal_booking"), orderBy("tanggal", "asc")), (snap) => { 
+        allSchedules = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+        renderTabelJadwal(); 
+    });
+
+    function renderTabelJadwal() {
+        const fTgl = document.getElementById('filterTanggal').value; 
+        const fBln = document.getElementById('filterBulan').value;
+        const body = document.getElementById('bodyJadwal'); 
+        body.innerHTML = "";
+        
+        window.currentFilteredSchedules = allSchedules.filter(r => {
+            if (fTgl) return r.tanggal === fTgl;
+            if (fBln) return r.tanggal.startsWith(fBln);
+            return true;
+        });
+
+        if (window.currentFilteredSchedules.length === 0) { body.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 20px; color: #999;'>Tidak ada data jadwal.</td></tr>"; return; }
+
+        window.currentFilteredSchedules.forEach(r => { 
+            body.innerHTML += `<tr>
+                <td>${r.tanggal.split('-').reverse().join('/')}</td>
+                <td><span class="badge-waktu">${r.jam_mulai.replace(" WIB","")} - ${r.jam_selesai.replace(" WIB","")} WIB</span></td>
+                <td>${r.ruangan}</td><td>${r.pelaksana_kegiatan}</td><td>${r.agenda}</td>
+                <td style="text-align:center;">
+                    <button class="btn-edit" onclick="editJadwal('${r.id}')">Edit</button>
+                    <button class="btn-delete" onclick="hapusJadwal('${r.id}')">Hapus</button>
+                </td>
+            </tr>`; 
+        });
+    }
+    
+    window.editJadwal = async (id) => {
+        const d = (await getDoc(doc(db, "jadwal_booking", id))).data();
+        document.getElementById('editDocId').value = id;
+        document.getElementById('ruangan').value = d.ruangan;
+        document.getElementById('agenda').value = d.agenda;
+        document.getElementById('tanggal').value = d.tanggal;
+        document.getElementById('jamMulai').value = d.jam_mulai.replace(" WIB","");
+        document.getElementById('jamSelesai').value = d.jam_selesai.replace(" WIB","");
+        document.getElementById('btnSubmitBooking').innerHTML = "Update Pemesanan";
+        showPanel('form');
+    };
+
+    window.hapusJadwal = async (id) => { 
+        if(confirm("Hapus jadwal ini?")) { 
+            const d = (await getDoc(doc(db, "jadwal_booking", id))).data(); 
+            await catatLog("HAPUS DATA", `Agenda: '${d.agenda}' di ${d.ruangan} tgl ${d.tanggal}`); 
+            await deleteDoc(doc(db, "jadwal_booking", id)); 
+        } 
+    };
+
+    document.getElementById('filterTanggal').onchange = () => { document.getElementById('filterBulan').value = ""; renderTabelJadwal(); };
+    document.getElementById('filterBulan').onchange = () => { document.getElementById('filterTanggal').value = ""; renderTabelJadwal(); };
+    document.getElementById('btnResetFilter').onclick = () => { document.getElementById('filterTanggal').value = document.getElementById('filterBulan').value = ""; renderTabelJadwal(); };
+
+    // --- FITUR UNDUH EXCEL & PDF ---
+    document.getElementById('btnUnduhExcel').onclick = () => {
+        const dataToExport = window.currentFilteredSchedules;
+        if(dataToExport.length === 0) { alert("Tidak ada data untuk diunduh!"); return; }
+
+        const data = dataToExport.map(r => ({
+            "Tanggal": r.tanggal.split('-').reverse().join('/'),
+            "Waktu": r.jam_mulai.replace(" WIB", "") + " - " + r.jam_selesai.replace(" WIB", ""),
+            "Ruangan": r.ruangan, "Bidang": r.pelaksana_kegiatan, "Agenda": r.agenda
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Jadwal Rapat");
+        XLSX.writeFile(workbook, "Laporan_Jadwal_Rapat_DKUKMPP.xlsx");
+    };
+
+    document.getElementById('btnUnduhPDF').onclick = () => {
+        const dataToExport = window.currentFilteredSchedules;
+        if(dataToExport.length === 0) { alert("Tidak ada data untuk diunduh!"); return; }
+
+        const { jsPDF } = window.jspdf;
+        const docPDF = new jsPDF();
+        
+        const rows = dataToExport.map(r => [
+            r.tanggal.split('-').reverse().join('/'),
+            r.jam_mulai.replace(" WIB", "") + " - " + r.jam_selesai.replace(" WIB", ""),
+            r.ruangan, r.pelaksana_kegiatan, r.agenda
+        ]);
+
+        docPDF.text("LAPORAN JADWAL PEMINJAMAN RUANGAN - DKUKMPP", 14, 15);
+        docPDF.autoTable({ head: [['Tanggal', 'Waktu', 'Ruangan', 'Bidang', 'Agenda']], body: rows, startY: 20, theme: 'striped', headStyles: { fillColor: [0, 51, 102] } });
+        docPDF.save("Laporan_Jadwal_Rapat_DKUKMPP.pdf");
+    };
+</script>
+</body>
+</html>

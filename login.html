@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Petugas - SIPERU DKUKMPP</title>
+    <style>
+        /* Gaya dasar untuk kotak login */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .login-box { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 400px; 
+            text-align: center; 
+        }
+        
+        /* Gaya Logo Kabupaten Bantul */
+        .login-logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 15px;
+            object-fit: contain;
+        }
+
+        .login-box h2 { 
+            margin-bottom: 5px; 
+            color: #003366; 
+            font-weight: bold;
+        }
+        .login-box p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        /* Penataan form */
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        /* Modifikasi Warna Placeholder */
+        input::placeholder {
+            color: #a0aec0; /* Warna abu-abu */
+            opacity: 1; 
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        /* Tombol login */
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold; 
+            transition: background-color 0.3s;
+        }
+        button:hover { 
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Area pesan kesalahan */
+        .error-msg { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px; 
+            margin-bottom: 20px; 
+            display: none; 
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgd34Vz3GQGaqy5uhWvRi1grNR7zPVapDmvc_xlo0UoJEVSDpxEcYqc64AJ9jIUEuyiRNCAKMnze567Hffw8ESgu2QFjJWrzsOfHVOyUqDKGkUpPXumf9A8SzyRdP8B4-uNfF2CW3Q4UbSGVAF4mGJ4SmjMLX7JN7PrMEe0XuAqRqByGt13G3ivfzyjlMss/s831/logo-kabupaten-bantul%20(1).png" alt="Logo Kabupaten Bantul" class="login-logo" onerror="this.src='logo.png'; this.onerror=null;">
+    
+    <h2>DKUKMPP Bantul</h2>
+    <p>Sistem Pemesanan Ruang Rapat</p>
+    
+    <div id="errorMsg" class="error-msg"></div>
+    
+    <form id="formLogin">
+        <div class="form-group">
+            <label for="email">Alamat Email</label>
+            <input type="email" id="email" placeholder="admin@dkukmppbantul.go.id" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Kata Sandi</label>
+            <input type="password" id="password" placeholder="Masukkan password" required>
+        </div>
+        
+        <button type="submit" id="btnLogin">Masuk ke Sistem</button>
+    </form>
+</div>
+
+<script type="module">
+    // Import modul Firebase Authentication
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // Konfigurasi Firebase 
+    const firebaseConfig = {
+        apiKey: "AIzaSyAa24QVQcS42AYn9mrB3KiN2cayiOuXEuc",
+        authDomain: "danu-project-8ec0e.firebaseapp.com",
+        projectId: "danu-project-8ec0e",
+        storageBucket: "danu-project-8ec0e.firebasestorage.app",
+        messagingSenderId: "711467380214",
+        appId: "1:711467380214:web:153181d40da8fbd08f2bd7",
+        measurementId: "G-8GYX7TRE07"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Cek status login dan arahkan ke admin.html 
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            window.location.replace("admin.html");
+        }
+    });
+
+    // Logika pengiriman form login 
+    document.getElementById('formLogin').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const btnLogin = document.getElementById('btnLogin');
+
+        errorMsg.style.display = "none";
+        btnLogin.innerHTML = "Memverifikasi...";
+        btnLogin.disabled = true;
+
+        try {
+            // Proses login ke Firebase 
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            console.error(error);
+            errorMsg.style.display = "block";
+            
+            // Penanganan pesan kesalahan yang ramah pengguna 
+            if (error.code === 'auth/invalid-credential') {
+                errorMsg.innerHTML = "❌ Email atau password salah. Silakan periksa kembali.";
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMsg.innerHTML = "❌ Terlalu banyak percobaan gagal. Silakan coba lagi nanti.";
+            } else {
+                errorMsg.innerHTML = "❌ Terjadi kesalahan teknis. Pastikan internet Anda aktif.";
+            }
+
+            btnLogin.innerHTML = "Masuk ke Sistem";
+            btnLogin.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

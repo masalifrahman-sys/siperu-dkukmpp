@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPERU - Dashboard Jadwal Rapat Modern</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #002b5c 0%, #004a9f 100%);
+            --success-gradient: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            --sidebar-gradient: linear-gradient(180deg, #001a38 0%, #002b5c 100%);
+            --bg-color: #f1f5f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; color: #1e293b; }
+
+        /* --- SIDEBAR MODERN --- */
+        .sidebar { width: 35%; background: var(--sidebar-gradient); color: white; padding: 35px; display: flex; flex-direction: column; overflow-y: hidden; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        .slideshow-container { position: relative; }
+        .mySlides { display: none; animation: fade 1.5s; }
+        @keyframes fade { from {opacity: 0} to {opacity: 1} }
+        
+        .room-status { font-size: 12px; font-weight: 800; padding: 8px 18px; border-radius: 30px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; backdrop-filter: blur(10px); }
+        .status-tersedia { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+        .status-digunakan { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(248, 113, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); } }
+
+        .slideshow-room-name { font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; text-transform: capitalize; border-bottom: 4px solid #3b82f6; display: inline-block; padding-bottom: 10px; }
+        .room-image { width: 100%; border-radius: 20px; height: 230px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+
+        .upcoming-section { margin-top: 25px; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .upcoming-title { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; color: #60a5fa; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; z-index: 10; letter-spacing: 1px; }
+        #listUpcoming { flex: 1; overflow: hidden; position: relative; }
+        .moving-list { display: flex; flex-direction: column; animation: moveUp 25s linear infinite; }
+        @keyframes moveUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+
+        .upcoming-item { margin-bottom: 18px; border-left: 3px solid rgba(255,255,255,0.2); padding-left: 15px; }
+        .upcoming-date { font-weight: 700; font-size: 12px; color: #93c5fd; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .upcoming-agenda { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; text-transform: capitalize; }
+        .upcoming-ruangan { opacity: 0.7; font-size: 13px; text-transform: capitalize; display: flex; align-items: center; gap: 5px; }
+
+        /* --- MAIN CONTENT MODERN --- */
+        .main-content { flex: 1; padding: 40px 50px; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }
+        .current-time { font-size: 56px; font-weight: 800; color: #002b5c; line-height: 1; letter-spacing: -1px; }
+        .current-date { font-size: 18px; font-weight: 600; color: #64748b; margin-bottom: 5px; text-align: right; }
+        
+        #listJadwal { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #listJadwal > div { display: flex; flex-direction: column; height: 100%; gap: 20px; }
+        
+        .schedule-page { animation: slideIn 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* KARTU JADWAL MODERN DENGAN GRADIENT & GLASS */
+        .schedule-card { display: flex; flex: 1; min-height: 0; }
+        .card-body { 
+            flex: 1; 
+            background: var(--primary-gradient); 
+            color: white; 
+            padding: 25px 35px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 40px rgba(0, 43, 92, 0.12); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Pola Geometris Modern */
+        .card-body::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            width: 40%; height: 100%;
+            background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .card-body.ongoing { background: var(--success-gradient); box-shadow: 0 20px 40px rgba(22, 163, 74, 0.15); } 
+        
+        .room-name-large { font-size: 16px; font-weight: 700; color: #93c5fd; margin-bottom: 8px; text-transform: capitalize; display: flex; align-items: center; gap: 8px; }
+        .ongoing .room-name-large { color: #dcfce7; }
+        
+        .agenda-large { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: white; line-height: 1.2; text-transform: capitalize; }
+        .bidang-text { font-size: 15px; color: rgba(255,255,255,0.8); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+        .badge-aktif { background: white; color: #16a34a; padding: 8px 20px; border-radius: 30px; font-size: 12px; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; animation: pulse-green 2s infinite; }
+        @keyframes pulse-green { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+        .badge-selanjutnya { background: #f59e0b; color: white; padding: 8px 20px; border-radius: 30px; font-size: 12px; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; }
+
+        /* GLASSMORPHISM UNTUK JAM */
+        .time-dominant { 
+            font-size: 32px; 
+            font-weight: 800; 
+            color: white; 
+            background: rgba(255, 255, 255, 0.12); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 25px; 
+            border-radius: 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap; 
+            z-index: 2; 
+        }
+
+        .page-indicator { text-align: center; margin-top: 15px; font-size: 13px; color: #94a3b8; font-weight: 700; }
+        .mi { font-size: 18px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <a href="login.html" class="logo" style="display: block; text-decoration: none; color: white; font-size: 13px; opacity: 0.7; margin-bottom: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity 0.3s;"
+    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+        Informasi Ruang Rapat DKUKMPP Kab Bantul
+    </a>
+    <div id="slideshow-wrapper" class="slideshow-container"></div>
+    <div class="upcoming-section">
+        <div class="upcoming-title">Jadwal Mendatang (H+7)</div>
+        <div id="listUpcoming"></div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="header">
+        <div style="text-align: right;">
+            <div id="txtTanggal" class="current-date">Memuat...</div>
+            <div id="txtJam" class="current-time">00:00:00</div>
+        </div>
+    </div>
+    <h2 style="margin-bottom: 20px; font-size: 24px; font-weight: 800; color: #0f172a; text-transform: uppercase; border-left: 6px solid #3b82f6; padding-left: 18px;">Jadwal Hari Ini</h2>
+    <div id="listJadwal"></div>
+    <div id="pageInfo" class="page-indicator"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyAa24QVQcS42AYn9mrB3KiN2cayiOuXEuc",
+        authDomain: "danu-project-8ec0e.firebaseapp.com",
+        projectId: "danu-project-8ec0e",
+        storageBucket: "danu-project-8ec0e.firebasestorage.app",
+        messagingSenderId: "711467380214",
+        appId: "1:711467380214:web:153181d40da8fbd08f2bd7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.activeRooms = new Set();
+    let todayData = [];
+    let currentPage = 0;
+    const itemsPerPage = 3; 
+
+    function updateClock() {
+        const skrgTime = new Date();
+        document.getElementById('txtTanggal').innerText = skrgTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('txtJam').innerText = skrgTime.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }).replace(/\./g, ':');
+    }
+    updateClock(); 
+    setInterval(updateClock, 1000);
+
+    onSnapshot(collection(db, "master_ruangan"), (snap) => {
+        const wrapper = document.getElementById('slideshow-wrapper');
+        wrapper.innerHTML = "";
+        snap.forEach(d => {
+            const r = d.data();
+            wrapper.innerHTML += `
+                <div class="mySlides">
+                    <div class="room-status status-tersedia" data-room="${d.id}"><span class="material-icons-round mi">check_circle</span> TERSEDIA</div><br>
+                    <h1 class="slideshow-room-name">${d.id}</h1>
+                    <p style="margin-bottom:20px; opacity:0.8; font-size: 15px; font-weight: 600; display:flex; align-items:center; gap:8px;"><span class="material-icons-round mi">groups</span> Kapasitas: ${r.kapasitas} Orang</p>
+                    <img src="${r.foto}" class="room-image">
+                </div>`;
+        });
+        updateRoomStatuses();
+        initSlideshow();
+    });
+
+    let slideIndex = 0;
+    let slideTimer;
+    function initSlideshow() {
+        let slides = document.getElementsByClassName("mySlides");
+        if (slides.length === 0) return;
+        if (slides.length === 1) { slides[0].style.display = "block"; return; }
+        for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
+        slideIndex++;
+        if (slideIndex > slides.length) slideIndex = 1;
+        slides[slideIndex-1].style.display = "block";
+        clearTimeout(slideTimer);
+        slideTimer = setTimeout(initSlideshow, 5000);
+    }
+
+    window.updateRoomStatuses = function() {
+        document.querySelectorAll('.room-status').forEach(el => {
+            const roomName = el.getAttribute('data-room');
+            if (window.activeRooms.has(roomName)) {
+                el.className = 'room-status status-digunakan';
+                el.innerHTML = '<span class="material-icons-round mi" style="font-size:14px">error</span> SEDANG DIGUNAKAN';
+            } else {
+                el.className = 'room-status status-tersedia';
+                el.innerHTML = '<span class="material-icons-round mi" style="font-size:14px">check_circle</span> TERSEDIA';
+            }
+        });
+    };
+
+    function renderHariIni(isPaging = true) {
+        const skrg = new Date();
+        
+        // Buat format HH:mm:ss untuk perbandingan super presisi
+        const waktuSekarang = skrg.getHours().toString().padStart(2, '0') + ":" + 
+                              skrg.getMinutes().toString().padStart(2, '0') + ":" + 
+                              skrg.getSeconds().toString().padStart(2, '0');
+        
+        window.activeRooms.clear();
+        todayData.forEach(r => {
+            // Tambahkan ":00" untuk jam mulai, dan ":10" untuk toleransi jam selesai
+            const jamMulai = r.jam_mulai.replace(" WIB","") + ":00";
+            const jamSelesai = r.jam_selesai.replace(" WIB","") + ":10"; 
+            if (waktuSekarang >= jamMulai && waktuSekarang < jamSelesai) { 
+                window.activeRooms.add(r.ruangan); 
+            }
+        });
+        updateRoomStatuses();
+
+        const dataBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":10") > waktuSekarang);
+        
+        const list = document.getElementById('listJadwal');
+        const pageInfo = document.getElementById('pageInfo');
+        
+        if (dataBelumSelesai.length === 0) {
+            list.innerHTML = "<div style='text-align:center; padding-top:60px; color:#94a3b8; font-weight: 700; font-size:18px;'>Seluruh jadwal rapat hari ini telah selesai.</div>";
+            pageInfo.innerText = "";
+            return;
+        }
+
+        const totalPages = Math.ceil(dataBelumSelesai.length / itemsPerPage);
+        if (currentPage >= totalPages) currentPage = 0;
+        
+        let foundNext = false;
+        const pageItems = dataBelumSelesai.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+        
+        let html = isPaging ? '<div class="schedule-page">' : '<div>';
+        
+        pageItems.forEach(r => {
+            const jamMulaiFormat = r.jam_mulai.replace(" WIB","");
+            const jamSelesaiFormat = r.jam_selesai.replace(" WIB","");
+            
+            const jamMulai = jamMulaiFormat + ":00";
+            const jamSelesai = jamSelesaiFormat + ":10";
+            
+            const isOngoing = (waktuSekarang >= jamMulai && waktuSekarang < jamSelesai);
+            
+            let badge = isOngoing ? '<div class="badge-aktif"><span class="material-icons-round mi" style="font-size:14px">sensors</span> SEDANG BERLANGSUNG</div>' : (!foundNext && jamMulai > waktuSekarang ? (foundNext=true, '<div class="badge-selanjutnya"><span class="material-icons-round mi" style="font-size:14px">event_repeat</span> SELANJUTNYA</div>') : '');
+
+            html += `<div class="schedule-card">
+                <div class="card-body ${isOngoing ? 'ongoing' : ''}">
+                    <div style="flex: 1;">
+                        <div class="room-name-large"><span class="material-icons-round mi" style="font-size:16px">place</span> ${r.ruangan}</div>
+                        <div class="agenda-large">${r.agenda}</div>
+                        <div class="bidang-text"><span class="material-icons-round mi" style="font-size:16px">corporate_fare</span> ${r.pelaksana_kegiatan}</div>
+                        ${badge}
+                    </div>
+                    <div style="text-align:right; margin-left: 15px;">
+                        <div class="time-dominant">${jamMulaiFormat} - ${jamSelesaiFormat}</div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        list.innerHTML = html + '</div>';
+        pageInfo.innerText = totalPages > 1 ? `Halaman ${currentPage + 1} dari ${totalPages}` : "";
+    }
+
+    const tglHariIni = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+    onSnapshot(query(collection(db, "jadwal_booking"), where("tanggal", "==", tglHariIni), orderBy("jam_mulai", "asc")), (snap) => {
+        todayData = snap.docs.map(doc => doc.data());
+        renderHariIni(true); 
+    });
+
+    // TIMER 1: PAGING (Geser tiap 10 detik)
+    setInterval(() => {
+        const skrg = new Date();
+        const waktuSekarang = skrg.getHours().toString().padStart(2, '0') + ":" + 
+                              skrg.getMinutes().toString().padStart(2, '0') + ":" + 
+                              skrg.getSeconds().toString().padStart(2, '0');
+        const countBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":10") > waktuSekarang).length;
+        if (countBelumSelesai > itemsPerPage) {
+            currentPage++;
+            renderHariIni(true); 
+        }
+    }, 10000);
+
+    // TIMER 2: SINKRONISASI AKURAT (Update UI tanpa animasi TEPAT pada detik ke-00 dan detik ke-10)
+    let detikTerakhir = new Date().getSeconds();
+    setInterval(() => {
+        const detikSekarang = new Date().getSeconds();
+        if (detikSekarang !== detikTerakhir) {
+            detikTerakhir = detikSekarang;
+            if ((detikSekarang === 0 || detikSekarang === 10) && todayData.length > 0) {
+                renderHariIni(false); 
+            }
+        }
+    }, 1000);
+
+    onSnapshot(query(collection(db, "jadwal_booking"), where("tanggal", ">", tglHariIni), orderBy("tanggal", "asc")), (snap) => {
+        const upcoming = document.getElementById('listUpcoming');
+        if (snap.empty) { upcoming.innerHTML = "<div style='opacity:0.5; padding-top:10px;'>Belum ada jadwal mendatang.</div>"; return; }
+        let itemsHTML = "";
+        snap.forEach(doc => {
+            const r = doc.data();
+            itemsHTML += `<div class="upcoming-item">
+                <div class="upcoming-date"><span class="material-icons-round mi" style="font-size:12px">calendar_today</span> ${r.tanggal.split('-').reverse().join('/')} | ${r.jam_mulai}</div>
+                <div class="upcoming-agenda">${r.agenda}</div>
+                <div class="upcoming-ruangan"><span class="material-icons-round mi" style="font-size:12px">meeting_room</span> ${r.ruangan}</div>
+            </div>`;
+        });
+        upcoming.innerHTML = '<div class="moving-list">' + itemsHTML + itemsHTML + '</div>';
+    });
+</script>
+</body>
+</html>
