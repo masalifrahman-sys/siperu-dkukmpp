@@ -4,25 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Petugas - SIPERU DKUKMPP</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         /* Gaya dasar untuk kotak login */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
-            margin: 0; 
+            margin: 0;
         }
         .login-box { 
-            background: white; 
+            background: white;
             padding: 40px; 
             border-radius: 12px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
             width: 100%; 
             max-width: 400px; 
-            text-align: center; 
+            text-align: center;
         }
         
         /* Gaya Logo Kabupaten Bantul */
@@ -34,7 +35,7 @@
         }
 
         .login-box h2 { 
-            margin-bottom: 5px; 
+            margin-bottom: 5px;
             color: #003366; 
             font-weight: bold;
         }
@@ -57,7 +58,7 @@
             font-size: 14px;
         }
         input { 
-            width: 100%; 
+            width: 100%;
             padding: 12px; 
             border: 1px solid #ddd; 
             border-radius: 6px; 
@@ -69,7 +70,7 @@
         /* Modifikasi Warna Placeholder */
         input::placeholder {
             color: #a0aec0; /* Warna abu-abu */
-            opacity: 1; 
+            opacity: 1;
         }
 
         input:focus {
@@ -79,7 +80,7 @@
         
         /* Tombol login */
         button { 
-            width: 100%; 
+            width: 100%;
             padding: 14px; 
             background-color: #007bff; 
             color: white; 
@@ -100,7 +101,7 @@
         
         /* Area pesan kesalahan */
         .error-msg { 
-            background-color: #f8d7da; 
+            background-color: #f8d7da;
             color: #721c24; 
             padding: 10px;
             border-radius: 4px;
@@ -131,6 +132,8 @@
             <label for="password">Kata Sandi</label>
             <input type="password" id="password" placeholder="Masukkan password" required>
         </div>
+        
+        <div class="g-recaptcha" data-sitekey="6LcrSe0sAAAAAG06YpBrtGBELun459f7jkad-a2x" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
         
         <button type="submit" id="btnLogin">Masuk ke Sistem</button>
     </form>
@@ -166,9 +169,18 @@
     document.getElementById('formLogin').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        const errorMsg = document.getElementById('errorMsg');
+        
+        // --- VALIDASI RECAPTCHA ---
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (recaptchaResponse.length === 0) {
+            errorMsg.style.display = "block";
+            errorMsg.innerHTML = "❌ Harap centang kotak 'I'm not a robot' terlebih dahulu!";
+            return;
+        }
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('errorMsg');
         const btnLogin = document.getElementById('btnLogin');
 
         errorMsg.style.display = "none";
@@ -181,6 +193,9 @@
         } catch (error) {
             console.error(error);
             errorMsg.style.display = "block";
+            
+            // Reset status centang robot jika login gagal
+            grecaptcha.reset();
             
             // Penanganan pesan kesalahan yang ramah pengguna 
             if (error.code === 'auth/invalid-credential') {
