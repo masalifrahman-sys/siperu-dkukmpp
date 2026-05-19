@@ -42,7 +42,7 @@
         .upcoming-item { margin-bottom: 18px; border-left: 3px solid rgba(255,255,255,0.2); padding-left: 15px; }
         .upcoming-date { font-weight: 700; font-size: 12px; color: #93c5fd; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
         .upcoming-agenda { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; text-transform: capitalize; }
-        .upcoming-ruangan { opacity: 0.7; font-size: 13px; text-transform: capitalize; display: flex; align-items: center; gap: 5px; }
+        .upcoming-ruangan { opacity: 0.8; font-size: 13px; text-transform: capitalize; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 
         /* --- MAIN CONTENT MODERN --- */
         .main-content { flex: 1; padding: 40px 50px; display: flex; flex-direction: column; }
@@ -59,28 +59,14 @@
         /* KARTU JADWAL MODERN DENGAN GRADIENT & GLASS */
         .schedule-card { display: flex; flex: 1; min-height: 0; }
         .card-body { 
-            flex: 1; 
-            background: var(--primary-gradient); 
-            color: white; 
-            padding: 25px 35px; 
-            border-radius: 24px; 
-            box-shadow: 0 20px 40px rgba(0, 43, 92, 0.12); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.05);
+            flex: 1; background: var(--primary-gradient); color: white; 
+            padding: 20px 30px; /* Diubah dari 25px 35px agar lebih ramah ruang di TV */
+            border-radius: 24px; box-shadow: 0 20px 40px rgba(0, 43, 92, 0.12); display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
         }
         
         /* Pola Geometris Modern */
         .card-body::after {
-            content: "";
-            position: absolute;
-            top: 0; right: 0;
-            width: 40%; height: 100%;
-            background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.08) 0%, transparent 70%);
-            pointer-events: none;
+            content: ""; position: absolute; top: 0; right: 0; width: 40%; height: 100%; background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.08) 0%, transparent 70%); pointer-events: none;
         }
 
         .card-body.ongoing { background: var(--success-gradient); box-shadow: 0 20px 40px rgba(22, 163, 74, 0.15); } 
@@ -88,7 +74,20 @@
         .room-name-large { font-size: 16px; font-weight: 700; color: #93c5fd; margin-bottom: 8px; text-transform: capitalize; display: flex; align-items: center; gap: 8px; }
         .ongoing .room-name-large { color: #dcfce7; }
         
-        .agenda-large { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: white; line-height: 1.2; text-transform: capitalize; }
+        .agenda-large { 
+            font-size: 24px; /* Dikecilkan sedikit dari 28px agar muat teks panjang */
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            color: white; 
+            line-height: 1.3; 
+            text-transform: capitalize;
+            /* Fitur batasan baris (Line Clamp) agar layout TV tidak jebol */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Batasi maksimal 2 baris teks agenda */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .bidang-text { font-size: 15px; color: rgba(255,255,255,0.8); font-weight: 500; display: flex; align-items: center; gap: 6px; }
 
         .badge-aktif { background: white; color: #16a34a; padding: 8px 20px; border-radius: 30px; font-size: 12px; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; animation: pulse-green 2s infinite; }
@@ -98,17 +97,7 @@
 
         /* GLASSMORPHISM UNTUK JAM */
         .time-dominant { 
-            font-size: 32px; 
-            font-weight: 800; 
-            color: white; 
-            background: rgba(255, 255, 255, 0.12); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 12px 25px; 
-            border-radius: 18px; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            white-space: nowrap; 
-            z-index: 2; 
+            font-size: 32px; font-weight: 800; color: white; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 25px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.2); white-space: nowrap; z-index: 2;
         }
 
         .page-indicator { text-align: center; margin-top: 15px; font-size: 13px; color: #94a3b8; font-weight: 700; }
@@ -119,7 +108,7 @@
 
 <div class="sidebar">
     <a href="login.html" class="logo" style="display: block; text-decoration: none; color: white; font-size: 13px; opacity: 0.7; margin-bottom: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity 0.3s;"
-    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
         Informasi Ruang Rapat DKUKMPP Kab Bantul
     </a>
     <div id="slideshow-wrapper" class="slideshow-container"></div>
@@ -144,7 +133,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+    
     const firebaseConfig = { 
         apiKey: "AIzaSyAa24QVQcS42AYn9mrB3KiN2cayiOuXEuc",
         authDomain: "danu-project-8ec0e.firebaseapp.com",
@@ -153,7 +142,7 @@
         messagingSenderId: "711467380214",
         appId: "1:711467380214:web:153181d40da8fbd08f2bd7"
     };
-
+    
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -216,28 +205,25 @@
 
     function renderHariIni(isPaging = true) {
         const skrg = new Date();
-        
-        // Buat format HH:mm:ss untuk perbandingan super presisi
         const waktuSekarang = skrg.getHours().toString().padStart(2, '0') + ":" + 
                               skrg.getMinutes().toString().padStart(2, '0') + ":" + 
                               skrg.getSeconds().toString().padStart(2, '0');
         
         window.activeRooms.clear();
         todayData.forEach(r => {
-            // Tambahkan ":00" untuk jam mulai, dan ":10" untuk toleransi jam selesai
             const jamMulai = r.jam_mulai.replace(" WIB","") + ":00";
-            const jamSelesai = r.jam_selesai.replace(" WIB","") + ":10"; 
+            const jamSelesai = r.jam_selesai.replace(" WIB","") + ":00"; 
             if (waktuSekarang >= jamMulai && waktuSekarang < jamSelesai) { 
                 window.activeRooms.add(r.ruangan); 
             }
         });
+        
         updateRoomStatuses();
 
-        const dataBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":10") > waktuSekarang);
+        const dataBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":00") > waktuSekarang);
         
         const list = document.getElementById('listJadwal');
         const pageInfo = document.getElementById('pageInfo');
-        
         if (dataBelumSelesai.length === 0) {
             list.innerHTML = "<div style='text-align:center; padding-top:60px; color:#94a3b8; font-weight: 700; font-size:18px;'>Seluruh jadwal rapat hari ini telah selesai.</div>";
             pageInfo.innerText = "";
@@ -251,13 +237,12 @@
         const pageItems = dataBelumSelesai.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
         
         let html = isPaging ? '<div class="schedule-page">' : '<div>';
-        
         pageItems.forEach(r => {
             const jamMulaiFormat = r.jam_mulai.replace(" WIB","");
             const jamSelesaiFormat = r.jam_selesai.replace(" WIB","");
             
             const jamMulai = jamMulaiFormat + ":00";
-            const jamSelesai = jamSelesaiFormat + ":10";
+            const jamSelesai = jamSelesaiFormat + ":00";
             
             const isOngoing = (waktuSekarang >= jamMulai && waktuSekarang < jamSelesai);
             
@@ -287,31 +272,32 @@
         renderHariIni(true); 
     });
 
-    // TIMER 1: PAGING (Geser tiap 10 detik)
+    // TIMER 1: PAGING (Geser halaman tiap 10 detik)
     setInterval(() => {
         const skrg = new Date();
         const waktuSekarang = skrg.getHours().toString().padStart(2, '0') + ":" + 
                               skrg.getMinutes().toString().padStart(2, '0') + ":" + 
                               skrg.getSeconds().toString().padStart(2, '0');
-        const countBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":10") > waktuSekarang).length;
+        const countBelumSelesai = todayData.filter(r => (r.jam_selesai.replace(" WIB","") + ":00") > waktuSekarang).length;
         if (countBelumSelesai > itemsPerPage) {
             currentPage++;
-            renderHariIni(true); 
+            renderHariIni(true);
         }
     }, 10000);
 
-    // TIMER 2: SINKRONISASI AKURAT (Update UI tanpa animasi TEPAT pada detik ke-00 dan detik ke-10)
+    // TIMER 2: SINKRONISASI 3 DETIK (Update UI instan tanpa animasi geser)
     let detikTerakhir = new Date().getSeconds();
     setInterval(() => {
         const detikSekarang = new Date().getSeconds();
         if (detikSekarang !== detikTerakhir) {
             detikTerakhir = detikSekarang;
-            if ((detikSekarang === 0 || detikSekarang === 10) && todayData.length > 0) {
+            if (detikSekarang % 3 === 0 && todayData.length > 0) {
                 renderHariIni(false); 
             }
         }
     }, 1000);
 
+    // MENAMPILKAN JADWAL MENDATANG H+7 (Kini dengan Bidang / Pelaksana)
     onSnapshot(query(collection(db, "jadwal_booking"), where("tanggal", ">", tglHariIni), orderBy("tanggal", "asc")), (snap) => {
         const upcoming = document.getElementById('listUpcoming');
         if (snap.empty) { upcoming.innerHTML = "<div style='opacity:0.5; padding-top:10px;'>Belum ada jadwal mendatang.</div>"; return; }
@@ -321,7 +307,11 @@
             itemsHTML += `<div class="upcoming-item">
                 <div class="upcoming-date"><span class="material-icons-round mi" style="font-size:12px">calendar_today</span> ${r.tanggal.split('-').reverse().join('/')} | ${r.jam_mulai}</div>
                 <div class="upcoming-agenda">${r.agenda}</div>
-                <div class="upcoming-ruangan"><span class="material-icons-round mi" style="font-size:12px">meeting_room</span> ${r.ruangan}</div>
+                <div class="upcoming-ruangan">
+                    <span class="material-icons-round mi" style="font-size:13px">corporate_fare</span> ${r.pelaksana_kegiatan} 
+                    <span style="margin: 0 6px; opacity: 0.5;">|</span> 
+                    <span class="material-icons-round mi" style="font-size:13px">meeting_room</span> ${r.ruangan}
+                </div>
             </div>`;
         });
         upcoming.innerHTML = '<div class="moving-list">' + itemsHTML + itemsHTML + '</div>';
