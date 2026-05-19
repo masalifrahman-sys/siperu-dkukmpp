@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengumuman Jadwal Rapat - SIPERU DKUKMPP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        
+        /* Bagian Header / Kop Surat */
+        .header { 
+            background: #003366; 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { font-size: 14px; color: #a1c4e6; }
+        
+        /* Wadah Konten Utama */
+        .container { 
+            max-width: 1200px; 
+            margin: 30px auto; 
+            padding: 20px; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+
+        /* Navigasi / Link Kembali */
+        .nav-links {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .nav-links a:hover { text-decoration: underline; }
+
+        /* Fitur Filter Pencarian */
+        .filter-bar { 
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 15px; 
+            align-items: flex-end; 
+            background: #f8fafc; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #eee; 
+            margin-bottom: 25px; 
+        }
+        .filter-item { flex: 1; min-width: 200px; }
+        .filter-item label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .filter-item input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .btn-reset { 
+            background: #6c757d; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: 0.3s;
+        }
+        .btn-reset:hover { background: #5a6268; }
+
+        /* Desain Tabel Data */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { 
+            background: #f8fafc; 
+            text-align: left; 
+            padding: 15px; 
+            font-size: 13px; 
+            color: #555; 
+            border-bottom: 2px solid #eee; 
+            white-space: nowrap;
+        }
+        td { 
+            padding: 15px; 
+            border-bottom: 1px solid #eee; 
+            font-size: 14px; 
+            color: #333; 
+        }
+        tr:hover { background-color: #fcfcfc; }
+        
+        .badge-waktu { 
+            background: #eef5ff; 
+            color: #0056b3; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            font-size: 13px; 
+            display: inline-block; 
+            white-space: nowrap; 
+        }
+        
+        .empty-state { text-align: center; padding: 40px; color: #999; font-style: italic; }
+
+        /* Mode HP / Layar Kecil */
+        @media (max-width: 768px) {
+            .container { margin: 15px; padding: 15px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .btn-reset { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Kemudahaan Layanan Informasi dan Tata Kelola Ruang Rapat</h1>
+        <p>Dinas Koperasi, UKM, Perindustrian, dan Perdagangan Kabupaten Bantul</p>
+    </div>
+
+    <div class="container">
+        <div class="nav-links">
+            <a href="index.html">← Kembali ke Layar Utama</a>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-item">
+                <label for="filterTanggal">Cari Berdasarkan Tanggal Spesifik</label>
+                <input type="date" id="filterTanggal">
+            </div>
+            <div class="filter-item">
+                <label for="filterBulan">Cari Berdasarkan Bulan</label>
+                <input type="month" id="filterBulan">
+            </div>
+            <div>
+                <button id="btnResetFilter" class="btn-reset">Lihat Semua Jadwal</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabelJadwal">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Waktu (WIB)</th>
+                        <th>Ruangan</th>
+                        <th>Bidang / Pelaksana</th>
+                        <th>Agenda Rapat</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyJadwal">
+                    <tr><td colspan='5' class="empty-state">Memuat data jadwal...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // Konfigurasi Firebase
+        const firebaseConfig = { 
+            apiKey: "AIzaSyAa24QVQcS42AYn9mrB3KiN2cayiOuXEuc",
+            authDomain: "danu-project-8ec0e.firebaseapp.com",
+            projectId: "danu-project-8ec0e",
+            storageBucket: "danu-project-8ec0e.firebasestorage.app",
+            messagingSenderId: "711467380214",
+            appId: "1:711467380214:web:153181d40da8fbd08f2bd7",
+            measurementId: "G-8GYX7TRE07"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allSchedules = [];
+
+        // --- LOGIKA MENDAPATKAN TANGGAL HARI INI SECARA OTOMATIS ---
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Ditambah 0 di depan jika bulan < 10
+        const dd = String(today.getDate()).padStart(2, '0'); // Ditambah 0 di depan jika tanggal < 10
+        const todayFormatted = `${yyyy}-${mm}-${dd}`;
+        
+        // Memasukkan tanggal hari ini ke dalam kotak filter secara default
+        document.getElementById('filterTanggal').value = todayFormatted;
+
+        // Ambil Data dari Firestore
+        onSnapshot(query(collection(db, "jadwal_booking"), orderBy("tanggal", "asc")), (snap) => { 
+            allSchedules = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+            renderTabelJadwal(); 
+        });
+
+        // Fungsi Render & Filter Tabel
+        function renderTabelJadwal() {
+            const fTgl = document.getElementById('filterTanggal').value; 
+            const fBln = document.getElementById('filterBulan').value;
+            const body = document.getElementById('bodyJadwal'); 
+            body.innerHTML = "";
+            
+            const filteredSchedules = allSchedules.filter(r => {
+                if (fTgl) return r.tanggal === fTgl;
+                if (fBln) return r.tanggal.startsWith(fBln);
+                return true;
+            });
+
+            if (filteredSchedules.length === 0) { 
+                let pesan = "Tidak ada jadwal rapat yang ditemukan.";
+                if (fTgl === todayFormatted) {
+                    pesan = "Tidak ada jadwal rapat untuk hari ini.";
+                }
+                body.innerHTML = `<tr><td colspan='5' class='empty-state'>${pesan}</td></tr>`; 
+                return;
+            }
+
+            filteredSchedules.forEach(r => { 
+                // Mengubah format YYYY-MM-DD ke DD/MM/YYYY
+                const formatTanggal = r.tanggal.split('-').reverse().join('/');
+                const jamMulai = r.jam_mulai.replace(" WIB","");
+                const jamSelesai = r.jam_selesai.replace(" WIB","");
+
+                body.innerHTML += `<tr>
+                    <td><b>${formatTanggal}</b></td>
+                    <td><span class="badge-waktu">${jamMulai} - ${jamSelesai}</span></td>
+                    <td style="text-transform: capitalize;">${r.ruangan}</td>
+                    <td>${r.pelaksana_kegiatan}</td>
+                    <td>${r.agenda}</td>
+                </tr>`; 
+            });
+        }
+        
+        // Logika Input Filter (Otomatis memuat ulang tabel saat tanggal/bulan diubah)
+        document.getElementById('filterTanggal').onchange = () => { 
+            document.getElementById('filterBulan').value = ""; // Kosongkan filter bulan jika tanggal dipilih
+            renderTabelJadwal(); 
+        };
+        
+        document.getElementById('filterBulan').onchange = () => { 
+            document.getElementById('filterTanggal').value = ""; // Kosongkan filter tanggal jika bulan dipilih
+            renderTabelJadwal(); 
+        };
+        
+        // Tombol Reset untuk melihat SEMUA jadwal
+        document.getElementById('btnResetFilter').onclick = () => { 
+            document.getElementById('filterTanggal').value = "";
+            document.getElementById('filterBulan').value = ""; 
+            renderTabelJadwal(); 
+        };
+    </script>
+</body>
+</html>
