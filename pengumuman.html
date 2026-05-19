@@ -29,11 +29,12 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
         }
 
-        /* Navigasi / Link Kembali */
+        /* Navigasi / Link Kembali & Info Tanggal */
         .nav-links {
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
+            align-items: center; /* Memastikan teks sejajar secara vertikal */
         }
         .nav-links a {
             text-decoration: none;
@@ -42,6 +43,17 @@
             font-size: 14px;
         }
         .nav-links a:hover { text-decoration: underline; }
+        
+        /* Gaya khusus untuk badge Hari & Tanggal */
+        .badge-hari-ini {
+            background: #eef5ff;
+            color: #003366;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid #cce0ff;
+        }
 
         /* Fitur Filter Pencarian */
         .filter-bar { 
@@ -109,6 +121,8 @@
             .container { margin: 15px; padding: 15px; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .btn-reset { width: 100%; }
+            /* Memindahkan tanggal ke bawah link kembali jika di HP */
+            .nav-links { flex-direction: column; align-items: flex-start; gap: 15px; }
         }
     </style>
 </head>
@@ -122,6 +136,7 @@
     <div class="container">
         <div class="nav-links">
             <a href="index.html">← Kembali ke Layar Utama</a>
+            <div id="teksHariIni" class="badge-hari-ini">Memuat tanggal...</div>
         </div>
 
         <div class="filter-bar">
@@ -179,6 +194,11 @@
 
         // --- LOGIKA MENDAPATKAN TANGGAL HARI INI SECARA OTOMATIS ---
         const today = new Date();
+        
+        // Menampilkan Teks Hari & Tanggal secara langsung di UI (Misal: Selasa, 19 Mei 2026)
+        const opsiTanggal = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('teksHariIni').innerText = today.toLocaleDateString('id-ID', opsiTanggal);
+
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0'); // Ditambah 0 di depan jika bulan < 10
         const dd = String(today.getDate()).padStart(2, '0'); // Ditambah 0 di depan jika tanggal < 10
